@@ -1,0 +1,19 @@
+High CPU by unknown process
+Interviewer asks
+"A server is at 99% CPU. How do you diagnose it?"
+top                        # live view, press P to sort by CPU
+ps aux --sort=-%cpu | head -10  # top CPU consumers
+pidstat 1 5                    # per-process CPU stats (1s interval x5)
+strace -p                 # see what the process is doing
+kill -9                   # force kill if needed
+Start broad (top), narrow to PID, then investigate with strace or lsof. Always check if it's a cron job or zombie.
+Pro tip: Mention: check crontab -l and /etc/cron.d/ — many CPU spikes are runaway cron jobs.
+Zombie processes
+Interviewer asks
+"I see many Z state processes. What does it mean and how to fix?"
+ps aux | grep Z             # find zombie processes
+ps -ef | grep          # find parent process
+kill -SIGCHLD    # signal parent to reap children
+# if parent ignores: kill the parent itself
+Zombie (Z) processes are already dead but not cleaned up by parent. They don't consume CPU/memory but do consume PIDs.
+Pro tip: Never say 'just kill the zombie' — you can't. Kill the parent process. This shows you really understand process lifecycle.
