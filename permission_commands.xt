@@ -1,0 +1,19 @@
+File permission issue — script won't run
+Interviewer asks
+"Developer says their shell script returns 'Permission denied'. How do you fix?"
+ls -l script.sh                # check current permissions
+chmod +x script.sh             # add execute permission
+chmod 755 script.sh            # rwxr-xr-x (standard for scripts)
+chown user:group script.sh    # fix ownership if needed
+sudo -l -U username            # check what user can sudo
+Permission denied can mean no execute bit, wrong owner, or SELinux/AppArmor blocking. Check all three.
+Pro tip: Always mention SELinux: 'I also check if SELinux is enforcing with getenforce — that's a common hidden cause.'
+Find files with SUID bit — security audit
+Interviewer asks
+"Security team wants a list of all SUID files on the server. How?"
+find / -perm -4000 -type f 2>/dev/null   # SUID files
+find / -perm -2000 -type f 2>/dev/null   # SGID files
+find / -perm -o+w -type f 2>/dev/null   # world-writable files
+stat /usr/bin/passwd                     # check a specific file
+SUID files run as the file owner (often root), not the calling user. This is a common privilege escalation vector.
+Pro tip: Shows security awareness — this question is common in TCS L2/L3 ops interviews.
