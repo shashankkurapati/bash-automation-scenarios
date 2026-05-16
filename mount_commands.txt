@@ -1,0 +1,37 @@
+NFS mount hanging — server unresponsivecommon
+Interviewer asks
+"A server with NFS mount is hanging. Even ls hangs. How to deal?"
+# Check if NFS server is reachable:
+showmount -e 
+ping 
+
+# Lazy unmount (doesn't wait for server):
+umount -l /mnt/nfs_share
+
+# Force unmount:
+umount -f /mnt/nfs_share
+
+# Check processes using mount:
+lsof /mnt/nfs_share
+fuser -m /mnt/nfs_share
+
+# Kill those processes first, then unmount
+Hard NFS mounts hang indefinitely if the NFS server is down. Use '-l' (lazy) unmount to detach without waiting. Always use 'soft' mount option in /etc/fstab for non-critical NFS.
+Pro tip: Pro tip: Mention the fstab option 'soft,timeo=15' — it makes NFS return an error instead of hanging indefinitely. Shows foresight.
+Read-only filesystem suddenlyunique
+Interviewer asks
+"Devs report they can't write files — filesystem went read-only. Why?"
+dmesg | tail -30                  # kernel errors — look for I/O errors
+dmesg | grep -i "remount|error|EXT4"
+mount | grep ro                   # check if mounted read-only
+# Filesystem remounts itself read-only on I/O errors to prevent corruption
+
+# Attempt to remount read-write:
+mount -o remount,rw /dev/sda1
+
+# Run fsck (must unmount first):
+umount /dev/sda1
+fsck -y /dev/sda1
+mount /dev/sda1
+Linux kernel automatically remounts filesystem read-only when it detects disk I/O errors. This is a protective mechanism. Underlying disk may be failing.
+Pro tip: Pro tip: Add 'I'd raise a hardware ticket for disk replacement and check smartctl -a /dev/sda for SMART disk health.' — shows end-to-end ownership.
