@@ -1,0 +1,21 @@
+App not reachable on port 8080
+Interviewer asks
+"Dev says their app on port 8080 is not accessible. How do you check?"
+ss -tlnp | grep 8080         # is the port listening?
+netstat -tlnp | grep 8080     # alternative
+curl -v http://localhost:8080  # test locally
+telnet  8080        # test from another server
+firewall-cmd --list-all        # check firewall rules
+iptables -L -n | grep 8080    # check iptables
+Check in this order: is the app running and bound to port → is firewall blocking → is it reachable externally.
+Pro tip: Say: 'I always check locally first to isolate whether it's an app issue or network/firewall issue.' — this shows methodical thinking.
+High network traffic investigation
+Interviewer asks
+"Network team reports unusual traffic spike from our server. How to investigate?"
+iftop -i eth0              # live bandwidth per connection
+nethogs                        # per-process network usage
+ss -s                          # socket summary stats
+tcpdump -i eth0 -n port 443   # capture packets on port 443
+netstat -an | grep ESTABLISHED | wc -l  # count active connections
+iftop shows destination IPs, nethogs shows which process is consuming bandwidth. tcpdump for deep inspection.
+Pro tip: Mention: check if it correlates with a cron job, backup job, or a log shipping agent like Filebeat.
