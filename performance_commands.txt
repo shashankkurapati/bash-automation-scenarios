@@ -1,0 +1,32 @@
+Swap usage very high — server slowunique
+Interviewer asks
+"Server swap is 80% used and it's slow. What do you do?"
+free -h                           # current memory and swap usage
+vmstat 1 5                        # si/so = swap in/swap out per sec
+# si/so > 0 continuously = active swapping = bad
+
+swapon -s                         # which swap devices are in use
+smem -s swap -r | head -10       # per-process swap usage
+# or:
+for f in /proc/*/status; do awk '/VmSwap/{print FILENAME, $2, $3}' $f; done | sort -k2 -rn | head
+
+# Clear swap (careful — needs enough free RAM):
+swapoff -a && swapon -a
+High swap + active si/so means system is swapping in real time — severe performance hit. Identify the memory-hungry process and restart or increase RAM.
+Pro tip: Pro tip: 'I check vm.swappiness kernel parameter — if it's 60 on a DB server, reducing to 10 can significantly reduce unnecessary swapping.' Shows kernel tuning knowledge.
+Too many TIME_WAIT connectionsunique
+Interviewer asks
+"netstat shows thousands of TIME_WAIT connections. App is slow. What do you do?"
+netstat -an | grep TIME_WAIT | wc -l   # count TIME_WAIT
+ss -s                                   # socket summary
+
+# Tune kernel to reuse TIME_WAIT sockets faster:
+sysctl net.ipv4.tcp_tw_reuse           # check current value
+sysctl -w net.ipv4.tcp_tw_reuse=1      # enable reuse
+sysctl -w net.ipv4.ip_local_port_range="1024 65535"  # more ports
+
+# Make permanent:
+echo "net.ipv4.tcp_tw_reuse=1" >> /etc/sysctl.conf
+sysctl -p
+TIME_WAIT is normal but thousands of them exhaust local port range. Enabling tcp_tw_reuse allows sockets to be reused without waiting for the full 2MSL timeout.
+Pro tip: Pro tip: This is rare knowledge. Saying 'tcp_tw_reuse and expanding ip_local_port_range' in a senior DevOps interview is very impressive.
