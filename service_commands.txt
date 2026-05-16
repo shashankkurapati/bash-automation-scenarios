@@ -1,0 +1,31 @@
+Service fails to start after rebootcommon
+Interviewer asks
+"After server restart, our app service didn't come up. How do you check?"
+systemctl status appservice        # current status + last logs
+journalctl -u appservice -n 50    # last 50 log lines
+journalctl -u appservice --since "today"
+systemctl enable appservice       # ensure it's set to auto-start
+systemctl start appservice        # manually start now
+# Check dependencies:
+systemctl list-dependencies appservice
+Most common cause: service not enabled (only started manually before). Also check if it depends on a DB or network that wasn't ready yet.
+Pro tip: Pro tip: Mention 'After=network-online.target' in the unit file — apps that connect to DB need network fully up, not just 'network.target'.
+Service keeps restarting in a loopunique
+Interviewer asks
+"systemctl shows service is 'activating' and keeps cycling. What do you do?"
+journalctl -u appservice -f        # follow logs live
+# Check restart policy:
+cat /etc/systemd/system/appservice.service | grep Restart
+
+# Temporarily disable auto-restart to inspect:
+systemctl edit appservice --force
+# Add: [Service]
+#      Restart=no
+
+systemctl daemon-reload
+systemctl start appservice        # now it won't restart — check logs
+
+# Check start limit:
+# StartLimitIntervalSec / StartLimitBurst in unit file
+When a service restart-loops, disable Restart= temporarily so it stays in failed state and you can read the actual error.
+Pro tip: Pro tip: This shows advanced systemd knowledge. Most juniors just 'systemctl restart' repeatedly — you stop the loop and investigate.
