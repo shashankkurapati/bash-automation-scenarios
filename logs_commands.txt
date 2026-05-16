@@ -1,0 +1,21 @@
+Application throwing errors — check logs
+Interviewer asks
+"Users say the app is broken but no alert fired. How do you start troubleshooting?"
+tail -f /var/log/app/app.log          # live log watch
+grep -i "error|exception" /var/log/app/app.log | tail -50
+journalctl -u appservice -n 100 --no-pager  # systemd service logs
+journalctl -u appservice --since "1 hour ago"
+awk '/ERROR/{print NR": "$0}' app.log      # numbered error lines
+Always tail the log first, then grep for error patterns. journalctl is preferred on RHEL 7+ / systemd systems.
+Pro tip: Mention: 'I also check dmesg and /var/log/messages for kernel-level issues that app logs won't capture.'
+Check last login and who is on server
+Interviewer asks
+"Suspicious activity reported. How do you check who logged in and when?"
+who                      # who is currently logged in
+w                        # who + what they're doing
+last | head -20          # login history from /var/log/wtmp
+lastb | head -10         # failed login attempts
+grep "sshd" /var/log/secure | grep "Failed|Accepted"
+history                  # command history of current user
+last reads /var/log/wtmp, lastb reads /var/log/btmp. Always check /var/log/secure for SSH auth logs.
+Pro tip: This is a gold answer: 'I'd also check auditd logs if audit daemon is running — ausearch -m LOGIN -ts today'
