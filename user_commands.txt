@@ -1,0 +1,35 @@
+User locked out — too many failed loginscommon
+Interviewer asks
+"A developer says their account is locked. How do you unlock it?"
+# Check account status:
+pam_tally2 --user=devuser        # RHEL 6 / older
+faillock --user devuser          # RHEL 7+
+
+# Unlock the account:
+pam_tally2 --user=devuser --reset
+faillock --user devuser --reset
+
+# Check if account is expired:
+chage -l devuser                 # view password/account expiry
+passwd -u devuser                # unlock if locked with passwd -l
+pam_tally2 / faillock tracks failed login attempts. After N failures (configured in /etc/pam.d/), account locks automatically.
+Pro tip: Pro tip: Mention 'I check /etc/pam.d/system-auth for deny= value to understand the lockout policy' — shows PAM knowledge.
+Sudo command works for one user but not anotherunique
+Interviewer asks
+"User A can run sudo fine. User B gets 'not in sudoers'. Both are in the same team. Why?"
+# Check sudoers file:
+visudo                           # safe editor for /etc/sudoers
+cat /etc/sudoers.d/*             # check drop-in files
+
+# Check group membership:
+id userB                         # what groups is userB in?
+groups userB
+getent group wheel               # who is in wheel group?
+
+# Add user to wheel group (RHEL):
+usermod -aG wheel userB
+
+# Or add specific sudoers rule:
+echo "userB ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/userB
+Sudoers can be managed via /etc/sudoers or /etc/sudoers.d/. Group-based access via 'wheel' is the standard on RHEL. User may not be in the group despite being on the same team.
+Pro tip: Pro tip: 'I always use visudo — never edit /etc/sudoers directly, it can lock out all admins if syntax is wrong.' — shows safety awareness.
