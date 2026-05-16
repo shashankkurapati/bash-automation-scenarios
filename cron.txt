@@ -1,0 +1,29 @@
+Cron job not runningcommon
+Interviewer asks
+"A scheduled backup cron is not executing. How do you debug?"
+crontab -l -u root              # list root's cron jobs
+cat /etc/cron.d/backup           # check system cron files
+grep CRON /var/log/syslog        # Ubuntu — cron execution log
+grep CRON /var/log/cron          # RHEL/CentOS cron log
+systemctl status crond           # is cron daemon running?
+# Check for common mistakes:
+# - Missing newline at end of crontab
+# - PATH not set inside crontab
+# - Script not executable
+90% of cron issues are: wrong path, script not executable, or env variable missing. Always add PATH and redirect output in the cron entry.
+Pro tip: Pro tip: Show this pattern — '* * * * * /path/script.sh >> /tmp/cron.log 2>&1' — output redirect is the #1 debug trick.
+Cron ran but did nothing — silent failureunique
+Interviewer asks
+"Cron shows it ran in logs but the task didn't happen. Why?"
+# Cron runs in minimal environment — no user env loaded
+# Add to crontab:
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+# Test by running cron's env manually:
+env -i /bin/bash --noprofile --norc /path/to/script.sh
+
+# Check exit code of script:
+echo $?
+Cron uses a stripped-down environment. Commands like 'aws', 'docker', 'python3' may not be found because /usr/local/bin is not in cron's PATH.
+Pro tip: Pro tip: This is a senior-level answer. Saying 'cron runs in a minimal env' immediately shows real experience.
