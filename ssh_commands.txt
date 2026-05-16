@@ -1,0 +1,30 @@
+SSH connection refused or timeoutcommon
+Interviewer asks
+"I can't SSH into a server. Connection refused. How do you troubleshoot?"
+ping                   # basic reachability
+telnet  22             # is port 22 open?
+ssh -vvv user@server              # verbose SSH — shows where it fails
+# On the server side:
+systemctl status sshd             # is SSH daemon running?
+ss -tlnp | grep 22                # is it listening?
+firewall-cmd --list-all           # firewall rule check
+cat /etc/ssh/sshd_config | grep -i "port|permitroot|allowusers"
+Work from outside in: network reachability → port open → service running → config allows the user.
+Pro tip: Pro tip: Mention 'AllowUsers' and 'DenyUsers' in sshd_config — many teams block users here and forget. This catches interviewers off guard.
+SSH key auth stopped working suddenlyunique
+Interviewer asks
+"SSH worked yesterday with keys. Today it asks for password. Why?"
+ls -la ~/.ssh/                    # check permissions
+# Correct permissions required:
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/authorized_keys
+chmod 644 ~/.ssh/id_rsa.pub
+chmod 600 ~/.ssh/id_rsa
+
+# Check if home dir perms are wrong:
+ls -ld /home/username            # should not be world-writable
+
+# Check SELinux context:
+ls -Z ~/.ssh/authorized_keys
+restorecon -Rv ~/.ssh/           # fix SELinux context
+SSH silently falls back to password if authorized_keys permissions are wrong. World-writable home dir also triggers this. SELinux is a hidden cause on RHEL.
