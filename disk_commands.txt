@@ -1,0 +1,18 @@
+Disk full alert on prod server
+Interviewer asks
+"Our prod server sent a disk 100% alert. How do you find and fix it?"
+df -h                          # check which partition is full
+du -sh /* 2>/dev/null           # top-level usage
+du -sh /var/log/* | sort -rh | head -10  # find top files
+> /var/log/some.log             # truncate a log file (safe)
+find / -name "*.log" -mtime +30 -delete  # delete old logs
+Always use df first to identify the partition, then du to drill down. Never rm a file that a running process has open — truncate instead.
+Pro tip: Bonus tip: mention 'lsof | grep deleted' to find files held by processes that are deleted but still consuming space.
+Check inode exhaustion
+Interviewer asks
+"Disk shows space free but can't create new files. Why?"
+df -i                   # check inode usage
+find /tmp -type f | wc -l   # count files in /tmp
+rm -rf /tmp/old_sessions/*  # clean up if inodes full there
+Inodes can run out before disk space does, especially in /tmp, mail spools, or when many small files are created.
+Pro tip: This is a classic senior question. Saying 'inode exhaustion' immediately impresses interviewers.
