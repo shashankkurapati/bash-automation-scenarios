@@ -1,0 +1,10 @@
+OOM killer terminated a process
+Interviewer asks
+"A process died suddenly and we see 'Out of memory' in logs. How to investigate?"
+dmesg | grep -i "oom"             # find OOM events
+grep -i "killed process" /var/log/messages
+free -h                               # current memory state
+cat /proc//status | grep Vm     # memory map of a process
+vmstat 1 5                            # memory + swap stats
+The OOM killer picks the process with highest 'oom_score'. You can adjust oom_score_adj to protect critical processes.
+Pro tip: Say: 'I'd also check /proc/meminfo and add more swap as a temporary fix while we investigate the memory leak.'
